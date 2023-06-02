@@ -4,6 +4,8 @@ PROMOTE ?=
 test_kotlin:
 	dune b $(PROMOTE) \
 		@appendo1.kotlin \
+		@appendo2.kotlin \
+		@reverso.kotlin
 
 test_racket:
 	dune b $(PROMOTE) \
