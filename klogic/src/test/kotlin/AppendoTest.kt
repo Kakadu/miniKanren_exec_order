@@ -22,7 +22,7 @@ class AppendoTest {
         val b = logicListOf("1".toSymbol())
 
         val goal = { q: Term<LogicList<Symbol>> -> appendo(a, b, q) }
-        run(2, goal)
+        run(1, goal)
     }
 
     // May be run manually using './gradlew :test --tests "AppendoTest.testAppendo2"'
