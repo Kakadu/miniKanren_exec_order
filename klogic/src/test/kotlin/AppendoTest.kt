@@ -23,6 +23,8 @@ class AppendoTest {
 
         val goal = { q: Term<LogicList<Symbol>> -> appendo(a, b, q) }
         run(1, goal)
+
+        UnificationsController.onFinish()
     }
 
     // May be run manually using './gradlew :test --tests "AppendoTest.testAppendo2"'
@@ -33,5 +35,7 @@ class AppendoTest {
 
         val goal = { q: Term<LogicList<Symbol>> -> appendo(a, b, q) }
         run(1, goal)
+
+        UnificationsController.onFinish()
     }
 }
