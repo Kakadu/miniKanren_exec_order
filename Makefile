@@ -23,7 +23,7 @@ test_caml:
 		@twines.ml \
 		@thrines.ml \
 
-test: test_racket test_caml #test_kotlin
+test: test_racket test_caml test_kotlin
 
 
 clean:
