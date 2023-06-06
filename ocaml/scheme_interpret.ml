@@ -136,7 +136,7 @@ module Gterm = struct
 
   let t =
     { t with
-      gcata = ()
+      gcata = t.gcata
     ; plugins =
         object
           method gmap = t.plugins#gmap
@@ -147,7 +147,7 @@ module Gterm = struct
               (fun fself ->
                 object
                   inherit ['a, 'b, _] fmt_t_t fa fb fself
-                  method! c_Symb fmt _ str = Format.fprintf fmt "(symb '%a)" fa str
+                  method! c_Symb fmt _ str = Format.fprintf fmt "'%a" fa str
                   method! c_Seq fmt _ xs = Format.fprintf fmt "(seq %a)" fb xs
                 end)
               fmt
@@ -159,13 +159,56 @@ module Gterm = struct
   type logic = (StringLo.logic, logic ListLo.logic) t OCanren.logic
   [@@deriving gt ~options:{ fmt; gmap }]
 
+   let logic =
+    { logic with
+      gcata = ()
+    ; plugins =
+        object
+          method gmap = t.plugins#gmap
+
+          method fmt ppf : logic -> unit =
+            let rec logic ppf = GT.fmt OCanren.logic helper ppf
+            and helper ppf =
+              GT.transform
+                t
+                (fun fself ->
+                  object
+                    inherit ['a, 'b, _, _,_,_,_,_,_] t_t
+                    method c_Symb fmt _ str =
+                      assert false
+                        (* Format.fprintf fmt "'%a" (GT.fmt OCanren.logic fa ) str *)
+                    method c_Seq fmt _ xs =
+                      assert false
+                      (* Format.fprintf fmt "(seq %a)" fb xs *)
+                  end)
+                ppf
+            in
+            logic ppf
+        end
+    }
+  ;;
+
   type injected = (GT.string OCanren.ilogic, injected Std.List.groundi) t ilogic
+
+  let lambda x body =
+    let open Std in
+    seq (OCanren.Std.list Fun.id
+      [ symb !!"lambda";
+        seq (!<x);
+        body
+      ])
+
+  let app f x : injected = seq (Std.list Fun.id [ f; x ]) [@@inline always]
+
+  let quote x = app (symb !!"quote") x
+
+  let list xs = seq (Std.list Fun.id (symb !!"list" :: xs))
 
   let show_rterm = Format.asprintf "%a" (GT.fmt ground)
   let show_lterm = Format.asprintf "%a" (GT.fmt logic)
+  let show_logic = show_lterm
 end
 
-(* let gterm_reifier = Gterm.reify *)
 
 module Gresult = struct
   [%%distrib
@@ -184,6 +227,8 @@ module Gresult = struct
   let show_stringl = GT.(show OCanren.logic) show_string
   let show_rresult r = Format.asprintf "%a" (GT.fmt ground) r
   let show_lresult (r : logic) = Format.asprintf "%a" (GT.fmt logic) r
+
+  let show_logic = show_lresult
 end
 
 let gresult_reifier = Gresult.reify
@@ -222,10 +267,10 @@ include struct
   let r x = reify_in_empty Env.reify x
 
   let ( ===! ) : fenv -> fenv -> goal =
-   fun x y ->
+   fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -233,10 +278,10 @@ include struct
   let r x = reify_in_empty Gterm.reify x
 
   let ( ==== ) : Gterm.injected -> Gterm.injected -> goal =
-   fun x y ->
+   fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -246,10 +291,10 @@ include struct
   let ( ====^ )
     : Gterm.injected Std.List.injected -> Gterm.injected Std.List.injected -> goal
     =
-   fun x y ->
+   fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -257,10 +302,10 @@ include struct
   let r x = reify_in_empty StringLo.reify x
 
   let ( ===!! ) : string ilogic -> string ilogic -> goal =
-   fun x y ->
+   fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -268,27 +313,27 @@ include struct
   let r x = reify_in_empty Gresult.reify x
 
   let ( ==!! ) : Gresult.injected -> Gresult.injected -> goal =
-   fun x y ->
+   fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 end
 
 ELSE
 
-include struct 
+include struct
 
-  let (===!) = OCanren.(===) 
+  let (===!) = OCanren.(===)
   (* let (===!!) = OCanren.(===)  *)
-  let (====) = OCanren.(===) 
+  let (====) = OCanren.(===)
   let (====^) = OCanren.(===)
   let ( ===!! ) = OCanren.(===)
-  let ( ==!!) = OCanren.(===) 
+  let ( ==!!) = OCanren.(===)
 
-  let ( =/= ) = OCanren.( =/= ) 
-  let ( =//= ) = OCanren.( =/= ) 
+  let ( =/= ) = OCanren.( =/= )
+  let ( =//= ) = OCanren.( =/= )
 end
 
 END
@@ -306,19 +351,25 @@ let rec not_in_envo : _ -> fenv -> goal =
  fun x env ->
   let open OCanren.Std in
   conde
-    [ fresh (y v rest) (env ===! Std.pair y v % rest) (y =/= x) (not_in_envo x rest)
+    [ fresh (y v rest) (env ===! pair y v % rest) (y =/= x) (not_in_envo x rest)
     ; nil () ===! env
     ]
 ;;
 
+let debug_line file line =
+  debug_var !!5 (Fun.flip OCanren.reify) (fun _ ->
+    Printf.printf "%s %d\n%!" file line;
+    success
+    )
+
 let rec proper_listo : (Gterm.injected Std.List.injected as 'i) -> fenv -> 'i -> goal =
- fun es env rs ->
+ fun exp env rs ->
   let open OCanren.Std in
   conde
-    [ Std.nil () ====^ es &&& (Std.nil () ====^ rs)
+    [ Std.nil () ====^ exp &&& (Std.nil () ====^ rs)
     ; fresh
         (e d te td)
-        (es ====^ e % d)
+        (exp ====^ e % d)
         (rs ====^ te % td)
         (evalo e env (val_ te))
         (proper_listo d env td)
@@ -341,15 +392,20 @@ and evalo : Gterm.injected -> fenv -> Gresult.injected -> goal =
         (proper_listo es env rs)
     ; fresh s (term ==== symb s) (lookupo s env r)
     ; fresh
-        (func arge arg x body env')
+        (func arge  x body env' arg)
         (term ==== seq (func %< arge))
         (evalo arge env arg)
         (evalo func env (closure x body env'))
         (evalo body (Std.pair x arg % env') r)
     ; fresh
         (x body)
-        (term ==== seq (symb !!"lambda" % (seq !<(symb x) %< body)))
+        (* (term ==== seq (Std.list Fun.id
+          [symb !!"lambda"; seq !<(symb x); body])) *)
+        (debug_line __FILE__ __LINE__)
+        (term ==== lambda (symb x) body)
+        (debug_line __FILE__ __LINE__)
         (not_in_envo !!"lambda" env)
+        (debug_line __FILE__ __LINE__)
         (r ==!! closure x body env)
     ]
 ;;

@@ -30,8 +30,8 @@
    "ocaml/bench/pp5+dump.exe -D TRACE")))
 
 (executables
- (names quines twines thrines)
- (modules quines twines thrines)
+ (names quines twines thrines evalo1)
+ (modules quines twines thrines evalo1)
  (libraries OCanren scheme_interpret)
  (flags
   (:standard -rectypes))
@@ -47,6 +47,7 @@
   quines.exe
   twines.exe
   thrines.exe
+  evalo1.exe
   ;
   ))
 

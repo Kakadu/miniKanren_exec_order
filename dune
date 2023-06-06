@@ -16,6 +16,7 @@
   ocaml/twines.exe
   ocaml/thrines.exe
   ocaml/conjunction.exe
+  ocaml/evalo1.exe
   ;
   ))
 
