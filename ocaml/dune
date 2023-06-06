@@ -8,7 +8,10 @@
  (modules reverso appendo conjunction)
  (libraries OCanren counters)
  (flags
-  (:standard -rectypes -dsource))
+  (:standard
+   -rectypes
+   ;-dsource
+   ))
  (preprocess
   (pps OCanren-ppx.ppx_fresh GT.ppx_all OCanren-ppx.ppx_distrib)))
 

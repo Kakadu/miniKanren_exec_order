@@ -24,3 +24,9 @@ test_caml:
 		@thrines.ml \
 
 test: test_racket test_caml #test_kotlin
+
+
+clean:
+	dune clean
+	$(RM) -r klogic/build
+

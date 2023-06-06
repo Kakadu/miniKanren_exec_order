@@ -21,14 +21,15 @@
 
 (cram
  (deps
-  klogic/gradle/wrapper/gradle-wrapper.jar
-  klogic/gradle/wrapper/gradle-wrapper.properties
-  klogic/src/test/kotlin/utils/Utils.kt
-  klogic/src/test/kotlin/AppendoTest.kt
-  klogic/src/test/kotlin/ReversoTest.kt
-  klogic/build.gradle.kts
-  klogic/gradlew
-  klogic/settings.gradle.kts
+  ; klogic/gradle/wrapper/gradle-wrapper.jar
+  ; klogic/gradle/wrapper/gradle-wrapper.properties
+  ; klogic/src/test/kotlin/utils/Utils.kt
+  ; klogic/src/test/kotlin/AppendoTest.kt
+  ; klogic/src/test/kotlin/ReversoTest.kt
+  ; klogic/build.gradle.kts
+  ; klogic/gradlew
+  ; klogic/settings.gradle.kts
+  klogic/klogic.jar
   ;klogic/.gradle
   ;klogic/build
   ))
