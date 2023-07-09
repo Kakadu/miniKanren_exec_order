@@ -159,6 +159,53 @@ module Gterm = struct
   type logic = (StringLo.logic, logic ListLo.logic) t OCanren.logic
   [@@deriving gt ~options:{ fmt; gmap }]
 
+
+  let _ : (Format.formatter -> logic -> unit) -> logic fmt_logic_t = new fmt_logic_t
+  let __ () =
+  GT.transform ground (fun (_:Format.formatter -> ground -> unit) -> assert false) Format.std_formatter (Symb "!!")
+
+ let __ () =
+  GT.transform logic (fun (_:Format.formatter -> logic -> unit) -> assert false) Format.std_formatter
+    (Value (Symb (Value  "!!")))
+
+                class ['extra_logic] fmt_logic_t _fself_logic =
+              object
+                inherit  [Format.formatter,'extra_logic,unit] logic_t
+                constraint 'extra_logic = logic
+                inherit
+                  (([(StringLo.logic, logic ListLo.logic) t,'extra_logic]
+                  OCanren.fmt_logic_t)
+                  (fun inh___040_ ->
+                     fun subj___041_ ->
+                       GT.fmt t
+                         (fun inh___042_ ->
+                            fun subj___043_ ->
+                              GT.fmt StringLo.logic inh___042_ subj___043_)
+                         (fun inh___044_ ->
+                            fun subj___045_ ->
+                              GT.fmt ListLo.logic _fself_logic inh___044_
+                                subj___045_) inh___040_ subj___041_)
+                  _fself_logic)
+              end
+
+
+  let logic = {logic with plugins = object
+    method gmap = logic.plugins#gmap
+    method fmt : Format.formatter ->logic -> unit = fun ppf  ->
+      (* let (_: (Format.formatter -> logic ->unit) -> logic fmt_logic_t ) = new fmt_logic_t in *)
+      GT.transform_gc gcata_logic (fun (fself: Format.formatter -> logic -> unit) -> object
+        inherit [_] fmt_logic_t fself as super
+
+        method! c_Value ppf p x =
+          match x with
+          | Symb (Value s) -> Format.fprintf ppf "'%s" s
+          | _ -> super#c_Value ppf p x
+        method! c_Var ppf _ idx _ = Format.fprintf ppf "_.%d" idx
+      end) ppf
+
+
+  end }
+
   type injected = (GT.string OCanren.ilogic, injected Std.List.groundi) t ilogic
 
   let show_rterm = Format.asprintf "%a" (GT.fmt ground)
@@ -225,7 +272,7 @@ include struct
    fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y st 
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -235,8 +282,8 @@ include struct
   let ( ==== ) : Gterm.injected -> Gterm.injected -> goal =
    fun x y st ->
     incr_counter ();
-    Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y st 
+    Printf.printf "%s ==== %s\n" (pp (r x)) (pp (r y));
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -249,7 +296,7 @@ include struct
    fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y st 
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 
@@ -260,7 +307,7 @@ include struct
    fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y  st 
+    OCanren.( === ) x y  st
    [@@inline]
  ;;
 
@@ -271,24 +318,24 @@ include struct
    fun x y st ->
     incr_counter ();
     Printf.printf "%s %s\n" (pp (r x)) (pp (r y));
-    OCanren.( === ) x y st 
+    OCanren.( === ) x y st
    [@@inline]
  ;;
 end
 
 ELSE
 
-include struct 
+include struct
 
-  let (===!) = OCanren.(===) 
+  let (===!) = OCanren.(===)
   (* let (===!!) = OCanren.(===)  *)
-  let (====) = OCanren.(===) 
+  let (====) = OCanren.(===)
   let (====^) = OCanren.(===)
   let ( ===!! ) = OCanren.(===)
-  let ( ==!!) = OCanren.(===) 
+  let ( ==!!) = OCanren.(===)
 
-  let ( =/= ) = OCanren.( =/= ) 
-  let ( =//= ) = OCanren.( =/= ) 
+  let ( =/= ) = OCanren.( =/= )
+  let ( =//= ) = OCanren.( =/= )
 end
 
 END
