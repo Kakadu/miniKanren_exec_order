@@ -15,11 +15,14 @@ After `dune test` they would be found in `/unif_count` and `unif_traces` directo
 
 #### System and Racket dependencies
 
-  sudo apt install racket openjdk-17-jdk opam -y
+  sudo apt install racket openjdk-17-jdk opam linux-tools-common -y
   raco pkg install benchmark pretty-format
+
+The `linux-tools-common`` may require extra kernel-specific packages...
 
 #### OCaml dependencies
 
+  opam init --bare
   opam switch create 4.14.1+flambda --packages=ocaml-variants.4.14.1+options,ocaml-option-flambda
   opam install OCanren OCanren-ppx --deps-only -y
   opam install benchmark -y

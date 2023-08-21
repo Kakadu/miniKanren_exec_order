@@ -1,4 +1,5 @@
 all: quines_bench_racket.sexp numero_bench_racket.sexp
+CPUPOWER := $(shell command -v cpupower 2> /dev/null)
 
 numero_bench.exe: numero_bench.rkt
 	@$(RM) $@
@@ -19,13 +20,17 @@ quines_demo.exe: quines_demo.rkt
 .PHONY: numero_bench_racket.sexp
 numero_bench_racket.sexp: numero_bench.exe
 	@$(RM) $@   # %U means seconds
+ifdef CPUPOWER
 	sudo cpupower frequency-set --governor performance
+endif
 	taskset -c 0 ./$^
 
 .PHONY: quines_bench_racket.sexp
 quines_bench_racket.sexp: quines_bench.exe
 	@ $(RM) $@
+ifdef CPUPOWER
 	sudo cpupower frequency-set --governor performance
+endif
 	taskset -c 0 ./$^
 
 clean:
